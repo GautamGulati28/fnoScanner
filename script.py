@@ -1,4 +1,6 @@
-
+import os
+import smtplib
+from email.message import EmailMessage
 import yfinance as yf    
 import pandas as pd      
 import warnings          
@@ -127,3 +129,25 @@ else:
     # from google.colab import files
     # files.download("Final_Breakout_List.xlsx")
 
+
+if positive_breakout_data.empty:
+    email_body = "No new positive breakout stocks today."
+else:
+    email_body = positive_breakout_data.to_string(index=False)
+
+EMAIL = os.environ["EMAIL"]
+APP_PASSWORD = os.environ["APP_PASSWORD"]
+
+msg = EmailMessage()
+
+msg["Subject"] = "Daily Positive Breakout Stocks"
+msg["From"] = EMAIL
+msg["To"] = EMAIL
+
+msg.set_content(email_body)
+
+with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+    smtp.login(EMAIL, APP_PASSWORD)
+    smtp.send_message(msg)
+
+print("Email sent successfully!")
