@@ -129,25 +129,134 @@ else:
     # from google.colab import files
     # files.download("Final_Breakout_List.xlsx")
 
-
-if positive_breakout_data.empty:
-    email_body = "No new positive breakout stocks today."
-else:
-    email_body = positive_breakout_data.to_string(index=False)
-
 EMAIL = os.environ["EMAIL"]
 APP_PASSWORD = os.environ["APP_PASSWORD"]
 
+RECIPIENTS = [
+    EMAIL,
+    "studypoint.gulati@gmail.com"
+]
+
+today = datetime.now().strftime("%d-%m-%Y")
+
 msg = EmailMessage()
 
-msg["Subject"] = "Daily Positive Breakout Stocks"
+msg["Subject"] = f"📈 Daily Breakout Scan | {len(positive_breakout_data)} Stocks"
 msg["From"] = EMAIL
-msg["To"] = EMAIL
+msg["To"] = ", ".join(RECIPIENTS)
 
-msg.set_content(email_body)
+if positive_breakout_data.empty:
+
+    html = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif;">
+
+        <h2>📈 Daily Positive Breakout Report</h2>
+
+        <p><b>Date:</b> {today}</p>
+
+        <p style="font-size:16px;color:red;">
+            No new positive breakout stocks today.
+        </p>
+
+        <hr>
+
+        <p style="color:gray;font-size:12px;">
+            Generated automatically via GitHub Actions
+        </p>
+
+    </body>
+    </html>
+    """
+
+else:
+
+    table_html = positive_breakout_data.round(2).to_html(
+        index=False,
+        border=0,
+        classes="stock-table"
+    )
+
+    html = f"""
+    <html>
+
+    <head>
+
+    <style>
+
+    body {{
+        font-family: Arial, sans-serif;
+        margin: 25px;
+        font-size: 14px;
+    }}
+
+    h2 {{
+        color: #0d6efd;
+    }}
+
+    table.stock-table {{
+        border-collapse: collapse;
+        width: 100%;
+    }}
+
+    table.stock-table th {{
+        background-color: #0d6efd;
+        color: white;
+        padding: 10px;
+        border: 1px solid #ddd;
+    }}
+
+    table.stock-table td {{
+        padding: 8px;
+        border: 1px solid #ddd;
+        text-align: center;
+    }}
+
+    table.stock-table tr:nth-child(even) {{
+        background-color: #f8f8f8;
+    }}
+
+    </style>
+
+    </head>
+
+    <body>
+
+        <h2>📈 Daily Positive Breakout Report</h2>
+
+        <p><b>Date:</b> {today}</p>
+
+        <p>
+            <b>Total Positive Breakouts:</b> {len(positive_breakout_data)}
+        </p>
+
+        {table_html}
+
+        <br>
+
+        <hr>
+
+        <p style="color:gray;font-size:12px;">
+            Generated automatically via GitHub Actions
+        </p>
+
+    </body>
+
+    </html>
+    """
+
+# Plain-text fallback
+msg.set_content(
+    f"Daily Positive Breakout Report\n"
+    f"Date: {today}\n"
+    f"Total Breakouts: {len(positive_breakout_data)}"
+)
+
+# HTML version
+msg.add_alternative(html, subtype="html")
 
 with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
     smtp.login(EMAIL, APP_PASSWORD)
     smtp.send_message(msg)
 
-print("Email sent successfully!")
+print("✅ Email sent successfully!")
