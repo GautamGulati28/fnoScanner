@@ -2,8 +2,8 @@ name: Daily Python Job
 
 on:
   schedule:
-    # Runs every day at 10:00 AM IST (04:30 UTC)
-    - cron: '*/15 * * * *'
+    # Runs every day at 1:00 AM IST
+    - cron: '30 19 * * *'
 
   workflow_dispatch:
 
